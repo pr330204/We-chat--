@@ -63,12 +63,20 @@ export default function ProfileForm() {
       });
     } catch (error: any) {
       console.error('Error creating profile:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Could not create your profile. Please try again.',
-        variant: 'destructive',
-      });
-      setLoading(false);
+      if (error.message?.includes('is already taken')) {
+        form.setError('username', {
+          type: 'manual',
+          message: error.message,
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: error.message || 'Could not create your profile. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+        setLoading(false);
     }
   }
 
