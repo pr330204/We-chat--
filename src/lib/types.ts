@@ -10,6 +10,7 @@ export type AppUser = {
   summary: string;
   isOnline: boolean;
   username: string;
+  createdAt: string | null;
 };
 
 export type AuthContextType = {

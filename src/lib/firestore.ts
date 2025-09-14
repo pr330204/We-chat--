@@ -51,7 +51,7 @@ export async function createUserProfile(firebaseUser: FirebaseUser, username: st
         lastInitial: lastInitial.toUpperCase(),
       });
 
-      const userProfile: AppUser = {
+      const userProfile: Omit<AppUser, 'createdAt'> = {
         uid,
         displayName,
         email,
@@ -65,7 +65,11 @@ export async function createUserProfile(firebaseUser: FirebaseUser, username: st
       transaction.set(userRef, { ...userProfile, createdAt: serverTimestamp() });
       transaction.set(usernameRef, { uid });
 
-      return userProfile;
+      // We can't return the result of serverTimestamp() directly, so we'll create a new object.
+      return {
+        ...userProfile,
+        createdAt: new Date().toISOString(),
+      };
     });
     return newUser;
   } catch (e: any) {
@@ -81,8 +85,13 @@ export async function getUser(uid: string): Promise<AppUser | null> {
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
-        const userData = userSnap.data() as AppUser;
-        return userData;
+        const userData = userSnap.data();
+        // Convert Firestore Timestamp to a serializable format (ISO string)
+        const createdAt = (userData.createdAt as Timestamp)?.toDate().toISOString() || null;
+        return {
+          ...(userData as AppUser),
+          createdAt,
+        };
     } else {
         return null;
     }
@@ -92,10 +101,15 @@ export async function getUser(uid: string): Promise<AppUser | null> {
 export async function getAllUsers(): Promise<AppUser[]> {
   const usersCol = collection(db, 'users');
   const userSnapshot = await getDocs(usersCol);
-  const userList = userSnapshot.docs.map((doc, i) => ({
-    ...(doc.data() as AppUser),
-    uid: doc.id,
-  }));
+  const userList = userSnapshot.docs.map((doc, i) => {
+     const userData = doc.data();
+     const createdAt = (userData.createdAt as Timestamp)?.toDate().toISOString() || null;
+    return {
+      ...(userData as AppUser),
+      uid: doc.id,
+      createdAt,
+    };
+  });
   return userList;
 }
 
