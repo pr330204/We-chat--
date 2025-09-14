@@ -41,13 +41,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error during sign-in:', error);
-      toast({
-        title: 'Sign-in failed',
-        description: 'Could not sign you in with Google. Please try again.',
-        variant: 'destructive',
-      });
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast({
+          title: 'Sign-in Cancelled',
+          description: 'आपने साइन-इन पॉपअप बंद कर दिया। कृपया फिर से प्रयास करें।',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Sign-in failed',
+          description: 'Could not sign you in with Google. Please try again.',
+          variant: 'destructive',
+        });
+      }
     }
   }, [toast]);
 
