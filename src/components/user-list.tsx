@@ -26,7 +26,8 @@ export default function UserList({ currentUser }: { currentUser: AppUser }) {
 
   const filteredAndSortedUsers = useMemo(() => {
     const filtered = users.filter(user =>
-      user.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+      user.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     // Sort users: followed users first, then by name
@@ -85,7 +86,7 @@ export default function UserList({ currentUser }: { currentUser: AppUser }) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search for users..."
+            placeholder="Search by name or username..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 w-full max-w-sm"
