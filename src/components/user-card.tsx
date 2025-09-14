@@ -1,6 +1,5 @@
 'use client';
 import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { AppUser } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -9,6 +8,7 @@ import { UserPlus, UserMinus } from 'lucide-react';
 import { followUser, unfollowUser } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 type UserCardProps = {
   user: AppUser;
@@ -19,10 +19,10 @@ type UserCardProps = {
 export default function UserCard({ user, currentUserId, isFollowing }: UserCardProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const router = useRouter();
 
   const handleFollowToggle = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click event from firing
+    e.stopPropagation(); // Prevent Link from navigating
+    e.preventDefault();
     startTransition(async () => {
       const action = isFollowing ? unfollowUser : followUser;
       const result = await action(currentUserId, user.uid);
@@ -36,34 +36,31 @@ export default function UserCard({ user, currentUserId, isFollowing }: UserCardP
     });
   };
 
-  const handleCardClick = () => {
-    router.push(`/chat/${user.uid}`);
-  };
-
   return (
     <Card 
       className={cn(
-        "flex flex-col transition-all duration-300 cursor-pointer hover:shadow-lg hover:-translate-y-1",
-        isPending && "opacity-50 cursor-not-allowed"
+        "flex flex-col transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
+        isPending && "opacity-50"
       )}
-      onClick={handleCardClick}
     >
-      <CardHeader className="flex-row items-center gap-4">
-        <Avatar className="h-12 w-12">
-          <AvatarImage src={user.photoURL} alt={user.displayName || user.username} />
-          <AvatarFallback>{(user.displayName || user.username || 'U').charAt(0)}</AvatarFallback>
-        </Avatar>
-        <div>
-          <CardTitle className="text-lg">{user.displayName || user.username}</CardTitle>
-          <div className="flex items-center text-sm text-muted-foreground">
-             <span className={`h-2 w-2 rounded-full mr-2 ${user.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-            {user.isOnline ? 'Online' : 'Offline'}
+      <Link href={`/chat/${user.uid}`} className="flex flex-col flex-grow h-full">
+        <CardHeader className="flex-row items-center gap-4">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={user.photoURL} alt={user.displayName || user.username} />
+            <AvatarFallback>{(user.displayName || user.username || 'U').charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div>
+            <CardTitle className="text-lg">{user.displayName || user.username}</CardTitle>
+            <div className="flex items-center text-sm text-muted-foreground">
+               <span className={`h-2 w-2 rounded-full mr-2 ${user.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+              {user.isOnline ? 'Online' : 'Offline'}
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-grow">
-        <p className="text-sm text-muted-foreground italic">"{user.summary}"</p>
-      </CardContent>
+        </CardHeader>
+        <CardContent className="flex-grow">
+          <p className="text-sm text-muted-foreground italic">"{user.summary}"</p>
+        </CardContent>
+      </Link>
       <CardFooter>
         <Button
           variant={isFollowing ? 'outline' : 'secondary'}
