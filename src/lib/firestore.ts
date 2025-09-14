@@ -8,6 +8,7 @@ import {
   arrayUnion,
   arrayRemove,
   serverTimestamp,
+  runTransaction,
 } from 'firebase/firestore';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { db } from './firebase';
@@ -21,33 +22,52 @@ export async function checkUserExists(uid: string): Promise<boolean> {
   return userSnap.exists();
 }
 
-export async function createUserProfile(firebaseUser: FirebaseUser): Promise<AppUser> {
+export async function createUserProfile(firebaseUser: FirebaseUser, username: string): Promise<AppUser> {
   const { displayName, email, photoURL, uid } = firebaseUser;
   if (!displayName || !email || !photoURL) {
     throw new Error('User data is incomplete from auth provider.');
   }
-  
-  const [firstName, ...lastNameParts] = displayName.split(' ');
-  const lastInitial = lastNameParts.length > 0 ? lastNameParts[lastNameParts.length - 1].charAt(0) : (firstName.length > 1 ? firstName.charAt(1) : '');
-
-  const { summary } = await generateProfileSummary({
-    firstName: firstName || '',
-    lastInitial: lastInitial.toUpperCase(),
-  });
-
-  const newUser: AppUser = {
-    uid,
-    displayName,
-    email,
-    photoURL,
-    following: [],
-    summary: summary || `A fascinating individual.`,
-    isOnline: true,
-  };
 
   const userRef = doc(db, 'users', uid);
-  await setDoc(userRef, { ...newUser, createdAt: serverTimestamp() });
-  return newUser;
+  const usernameRef = doc(db, 'usernameMap', username.toLowerCase());
+
+  try {
+    const newUser = await runTransaction(db, async (transaction) => {
+      const usernameDoc = await transaction.get(usernameRef);
+      if (usernameDoc.exists()) {
+        throw new Error(`Username "${username}" is already taken.`);
+      }
+
+      const [firstName, ...lastNameParts] = displayName.split(' ');
+      const lastInitial = lastNameParts.length > 0 ? lastNameParts[lastNameParts.length - 1].charAt(0) : (firstName.length > 1 ? firstName.charAt(1) : '');
+
+      const { summary } = await generateProfileSummary({
+        firstName: firstName || '',
+        lastInitial: lastInitial.toUpperCase(),
+      });
+
+      const userProfile: AppUser = {
+        uid,
+        displayName,
+        email,
+        photoURL,
+        following: [],
+        summary: summary || `A fascinating individual.`,
+        isOnline: true,
+        username,
+      };
+
+      transaction.set(userRef, { ...userProfile, createdAt: serverTimestamp() });
+      transaction.set(usernameRef, { email });
+
+      return userProfile;
+    });
+    return newUser;
+  } catch (e: any) {
+    console.error("Transaction failed: ", e);
+    // Re-throw the specific error message from the transaction
+    throw new Error(e.message || "Failed to create user profile.");
+  }
 }
 
 

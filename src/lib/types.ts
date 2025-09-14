@@ -8,6 +8,7 @@ export type AppUser = {
   following: string[];
   summary: string;
   isOnline: boolean;
+  username: string;
 };
 
 export type AuthContextType = {
