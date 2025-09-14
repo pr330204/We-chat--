@@ -79,7 +79,7 @@ export default function UserList({ currentUser }: { currentUser: AppUser }) {
   return (
     <div className="container mx-auto p-4 md:p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Find Connections</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Welcome, {currentUser.displayName}!</h1>
         <p className="text-muted-foreground mb-4">Browse and search for other users on the platform.</p>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
