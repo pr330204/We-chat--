@@ -4,9 +4,10 @@ import { useAuth } from "@/hooks/use-auth";
 import LandingPage from "@/components/landing-page";
 import UserList from "@/components/user-list";
 import { Skeleton } from "@/components/ui/skeleton";
+import ProfileForm from "@/components/profile-form";
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user, isNewUser, loading } = useAuth();
 
   if (loading) {
     return (
@@ -33,6 +34,10 @@ export default function Home() {
         </div>
       </div>
     );
+  }
+
+  if (isNewUser) {
+    return <ProfileForm />;
   }
 
   return user ? <UserList currentUser={user} /> : <LandingPage />;

@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { onAuthStateChanged, signInWithPopup, User as FirebaseUser } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
-import { getOrCreateUser } from '@/lib/firestore';
+import { getUser, checkUserExists } from '@/lib/firestore';
 import type { AppUser, AuthContextType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,12 +18,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
   const { toast } = useToast();
+
+  const reloadUser = useCallback(async () => {
+    if (auth.currentUser) {
+      try {
+        const appUser = await getUser(auth.currentUser.uid);
+        setUser(appUser);
+        setIsNewUser(false);
+      } catch (error) {
+        console.error("Failed to reload user profile:", error);
+        toast({
+          title: 'Profile Error',
+          description: 'Could not load your user profile.',
+          variant: 'destructive',
+        });
+      }
+    }
+  }, [toast]);
 
   const signIn = useCallback(async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-      // onAuthStateChanged will handle the user creation/retrieval
     } catch (error) {
       console.error('Error during sign-in:', error);
       toast({
@@ -39,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await auth.signOut();
       setUser(null);
       setFirebaseUser(null);
+      setIsNewUser(false);
     } catch (error) {
       console.error('Error during sign-out:', error);
       toast({
@@ -54,10 +72,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (fbUser) {
         setFirebaseUser(fbUser);
         try {
-          const appUser = await getOrCreateUser(fbUser);
-          setUser(appUser);
+          const userExists = await checkUserExists(fbUser.uid);
+          if (userExists) {
+            const appUser = await getUser(fbUser.uid);
+            setUser(appUser);
+            setIsNewUser(false);
+          } else {
+            setUser(null);
+            setIsNewUser(true);
+          }
         } catch (error) {
-           console.error("Failed to get or create user profile:", error);
+           console.error("Failed to check user profile:", error);
            toast({
              title: 'Profile Error',
              description: 'Could not load your user profile.',
@@ -68,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null);
         setFirebaseUser(null);
+        setIsNewUser(false);
       }
       setLoading(false);
     });
@@ -75,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [toast, signOut]);
 
-  const value = { user, firebaseUser, loading, signIn, signOut };
+  const value = { user, firebaseUser, loading, signIn, signOut, isNewUser, reloadUser };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

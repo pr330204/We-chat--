@@ -14,51 +14,54 @@ import { db } from './firebase';
 import type { AppUser } from './types';
 import { generateProfileSummary } from '@/ai/flows/generate-profile-summary';
 
-export async function getOrCreateUser(firebaseUser: FirebaseUser): Promise<AppUser> {
-  const userRef = doc(db, 'users', firebaseUser.uid);
+
+export async function checkUserExists(uid: string): Promise<boolean> {
+  const userRef = doc(db, 'users', uid);
   const userSnap = await getDoc(userRef);
-
-  if (userSnap.exists()) {
-    return userSnap.data() as AppUser;
-  } else {
-    const { displayName, email, photoURL, uid } = firebaseUser;
-    if (!displayName || !email || !photoURL) {
-      throw new Error('User data is incomplete from auth provider.');
-    }
-    
-    const [firstName, ...lastNameParts] = displayName.split(' ');
-    const lastInitial = lastNameParts.length > 0 ? lastNameParts[lastNameParts.length - 1].charAt(0) : (firstName.length > 1 ? firstName.charAt(1) : '');
-
-    const { summary } = await generateProfileSummary({
-      firstName: firstName || '',
-      lastInitial: lastInitial.toUpperCase(),
-    });
-
-    const newUser: AppUser = {
-      uid,
-      displayName,
-      email,
-      photoURL,
-      following: [],
-      summary: summary || `A fascinating individual.`,
-      isOnline: true,
-    };
-
-    await setDoc(userRef, { ...newUser, createdAt: serverTimestamp() });
-    return newUser;
-  }
+  return userSnap.exists();
 }
+
+export async function createUserProfile(firebaseUser: FirebaseUser): Promise<AppUser> {
+  const { displayName, email, photoURL, uid } = firebaseUser;
+  if (!displayName || !email || !photoURL) {
+    throw new Error('User data is incomplete from auth provider.');
+  }
+  
+  const [firstName, ...lastNameParts] = displayName.split(' ');
+  const lastInitial = lastNameParts.length > 0 ? lastNameParts[lastNameParts.length - 1].charAt(0) : (firstName.length > 1 ? firstName.charAt(1) : '');
+
+  const { summary } = await generateProfileSummary({
+    firstName: firstName || '',
+    lastInitial: lastInitial.toUpperCase(),
+  });
+
+  const newUser: AppUser = {
+    uid,
+    displayName,
+    email,
+    photoURL,
+    following: [],
+    summary: summary || `A fascinating individual.`,
+    isOnline: true,
+  };
+
+  const userRef = doc(db, 'users', uid);
+  await setDoc(userRef, { ...newUser, createdAt: serverTimestamp() });
+  return newUser;
+}
+
 
 export async function getUser(uid: string): Promise<AppUser | null> {
     const userRef = doc(db, 'users', uid);
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
-        const userData = userSnap.data() as Omit<AppUser, 'isOnline'>;
+        const userData = userSnap.data() as AppUser;
         // Simulate online status for demo
         const allUsers = await getDocs(collection(db, 'users'));
         const userIndex = allUsers.docs.findIndex(doc => doc.id === uid);
-        return { ...userData, isOnline: userIndex % 2 === 0};
+        userData.isOnline = userIndex % 2 === 0;
+        return userData;
     } else {
         return null;
     }

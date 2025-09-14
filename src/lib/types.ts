@@ -14,6 +14,8 @@ export type AuthContextType = {
   user: AppUser | null;
   firebaseUser: FirebaseUser | null;
   loading: boolean;
+  isNewUser: boolean;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
+  reloadUser: () => Promise<void>;
 };
