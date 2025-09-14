@@ -26,8 +26,8 @@ export default function UserList({ currentUser }: { currentUser: AppUser }) {
 
   const filteredAndSortedUsers = useMemo(() => {
     const filtered = users.filter(user =>
-      user.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchQuery.toLowerCase())
+      (user.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.username || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     // Sort users: followed users first, then by name
@@ -36,7 +36,7 @@ export default function UserList({ currentUser }: { currentUser: AppUser }) {
       const bIsFollowed = currentUser.following.includes(b.uid);
       if (aIsFollowed && !bIsFollowed) return -1;
       if (!aIsFollowed && bIsFollowed) return 1;
-      return a.displayName.localeCompare(b.displayName);
+      return (a.displayName || '').localeCompare(b.displayName || '');
     });
   }, [users, searchQuery, currentUser.following]);
 
