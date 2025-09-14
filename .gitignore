@@ -27,16 +27,12 @@ yarn-error.log*
 # local env files
 .env.local
 .env.development.local
-.env.test.local
 .env.production.local
+.env.test.local
 
 # vercel
 .vercel
 
-# genkit
-.genkit/
-genkit.log
-
-# firebase
-*.firebase
-*firebase.json
+# typescript
+*.tsbuildinfo
+next-env.d.ts
