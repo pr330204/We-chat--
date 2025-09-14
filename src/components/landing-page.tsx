@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { LogIn } from 'lucide-react';
 
 export default function LandingPage() {
   const { signIn } = useAuth();
@@ -17,7 +18,7 @@ export default function LandingPage() {
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">Welcome!</CardTitle>
-          <CardDescription>Sign in to continue to Chat App</CardDescription>
+          <CardDescription>Sign in to continue to Nexus Connect</CardDescription>
         </CardHeader>
         <CardContent>
           <Button size="lg" className="w-full" onClick={signIn}>

@@ -1,59 +1,85 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { AppUser } from '@/lib/types';
+import type { AppUser, ChatMessage } from '@/lib/types';
 import { Send } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { useAuth } from '@/hooks/use-auth';
+import { sendMessage, streamMessages } from '@/lib/firestore';
+import { Timestamp } from 'firebase/firestore';
 
-const demoMessages = [
-  { id: 1, sender: 'other', text: 'Hey, how are you doing?' },
-  { id: 2, sender: 'me', text: 'I\'m doing great, thanks for asking! Just checking out Nexus Connect. It\'s pretty cool.' },
-  { id: 3, sender: 'other', text: 'Awesome! Yeah, the AI-generated summaries are a nice touch.' },
-  { id: 4, sender: 'other', text: 'Have you tried the follow feature yet?' },
-  { id: 5, sender: 'me', text: 'I have! It\'s really useful for keeping track of people I find interesting.' },
-];
-
-export default function ChatInterface({ user }: { user: AppUser }) {
-  const [messages, setMessages] = useState(demoMessages);
+export default function ChatInterface({ recipient }: { recipient: AppUser }) {
+  const { user: currentUser } = useAuth();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const chatId = [currentUser.uid, recipient.uid].sort().join('-');
+    const unsubscribe = streamMessages(chatId, (newMessages) => {
+      setMessages(newMessages);
+    });
+
+    return () => unsubscribe();
+  }, [currentUser, recipient.uid]);
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [messages]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim()) {
-      setMessages([...messages, { id: Date.now(), sender: 'me', text: newMessage }]);
+    if (newMessage.trim() && currentUser) {
+      const message: Omit<ChatMessage, 'id' | 'timestamp'> = {
+        text: newMessage,
+        from: currentUser.uid,
+        to: recipient.uid,
+      };
+      await sendMessage(currentUser.uid, recipient.uid, message.text);
       setNewMessage('');
     }
   };
 
   return (
     <div className="flex-grow flex flex-col">
-      <ScrollArea className="flex-grow p-4">
+      <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
         <div className="space-y-6">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex items-end gap-2 ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
-            >
-              {message.sender === 'other' && (
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.photoURL} />
-                  <AvatarFallback>{user.displayName.charAt(0)}</AvatarFallback>
-                </Avatar>
-              )}
+          {messages.map((message) => {
+            const isMe = message.from === currentUser?.uid;
+            const sender = isMe ? currentUser : recipient;
+            return (
               <div
-                className={`max-w-xs md:max-w-md rounded-lg px-4 py-2 ${
-                  message.sender === 'me'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-card border'
-                }`}
+                key={message.id}
+                className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}
               >
-                <p>{message.text}</p>
+                {!isMe && (
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={sender.photoURL} />
+                    <AvatarFallback>{sender.displayName.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                )}
+                <div
+                  className={`max-w-xs md:max-w-md rounded-lg px-4 py-2 ${
+                    isMe
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-card border'
+                  }`}
+                >
+                  <p>{message.text}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </ScrollArea>
       <div className="p-4 border-t bg-card">
@@ -63,8 +89,9 @@ export default function ChatInterface({ user }: { user: AppUser }) {
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
             autoComplete="off"
+            disabled={!currentUser}
           />
-          <Button type="submit" size="icon" disabled={!newMessage.trim()}>
+          <Button type="submit" size="icon" disabled={!newMessage.trim() || !currentUser}>
             <Send className="h-4 w-4" />
             <span className="sr-only">Send</span>
           </Button>

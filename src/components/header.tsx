@@ -8,9 +8,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { LogOut, User as UserIcon } from 'lucide-react';
+import { LogOut, User as UserIcon, LogIn } from 'lucide-react';
 import Image from 'next/image';
 
 export default function Header() {
@@ -33,7 +34,7 @@ export default function Header() {
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72" />
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72" />
           </svg>
-          <span className="font-bold">Chat App</span>
+          <span className="font-bold">Nexus Connect</span>
         </Link>
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-1">
@@ -58,6 +59,7 @@ export default function Header() {
                       <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                     </div>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
@@ -66,7 +68,7 @@ export default function Header() {
               </DropdownMenu>
             ) : (
               <Button onClick={signIn}>
-                <Image src="/google.svg" alt="Google logo" width={16} height={16} className="mr-2" />
+                <LogIn className="mr-2 h-4 w-4" />
                 Sign In
               </Button>
             )}

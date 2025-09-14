@@ -9,10 +9,15 @@ import {
   arrayRemove,
   serverTimestamp,
   runTransaction,
+  addDoc,
+  query,
+  orderBy,
+  onSnapshot,
+  Timestamp,
 } from 'firebase/firestore';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { db } from './firebase';
-import type { AppUser } from './types';
+import type { AppUser, ChatMessage } from './types';
 import { generateProfileSummary } from '@/ai/flows/generate-profile-summary';
 
 
@@ -58,7 +63,7 @@ export async function createUserProfile(firebaseUser: FirebaseUser, username: st
       };
 
       transaction.set(userRef, { ...userProfile, createdAt: serverTimestamp() });
-      transaction.set(usernameRef, { email });
+      transaction.set(usernameRef, { uid });
 
       return userProfile;
     });
@@ -111,4 +116,41 @@ export async function unfollowUserInFirestore(currentUserId: string, targetUserI
   await updateDoc(userRef, {
     following: arrayRemove(targetUserId),
   });
+}
+
+// CHAT FUNCTIONS
+
+function getChatId(userId1: string, userId2: string): string {
+  return [userId1, userId2].sort().join('-');
+}
+
+export async function sendMessage(fromId: string, toId: string, text: string) {
+  const chatId = getChatId(fromId, toId);
+  const messagesCol = collection(db, 'chats', chatId, 'messages');
+  
+  await addDoc(messagesCol, {
+    from: fromId,
+    to: toId,
+    text,
+    timestamp: serverTimestamp(),
+  });
+}
+
+export function streamMessages(chatId: string, callback: (messages: ChatMessage[]) => void) {
+  const messagesCol = collection(db, 'chats', chatId, 'messages');
+  const q = query(messagesCol, orderBy('timestamp', 'asc'));
+
+  const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const messages = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        timestamp: data.timestamp,
+      } as ChatMessage;
+    });
+    callback(messages);
+  });
+
+  return unsubscribe;
 }

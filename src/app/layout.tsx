@@ -3,6 +3,9 @@ import './globals.css';
 import { AuthProvider } from '@/providers/auth-provider';
 import Header from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: 'Nexus Connect',
@@ -16,12 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased">
+      <body className={`${inter.variable} font-body antialiased`}>
         <AuthProvider>
           <div className="flex flex-col min-h-screen">
             <Header />
