@@ -5,7 +5,7 @@ import { AppUser } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
-import { UserPlus, UserMinus, MessageCircle } from 'lucide-react';
+import { UserPlus, UserMinus } from 'lucide-react';
 import { followUser, unfollowUser } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -50,11 +50,11 @@ export default function UserCard({ user, currentUserId, isFollowing }: UserCardP
     >
       <CardHeader className="flex-row items-center gap-4">
         <Avatar className="h-12 w-12">
-          <AvatarImage src={user.photoURL} alt={user.displayName} />
-          <AvatarFallback>{user.displayName.charAt(0)}</AvatarFallback>
+          <AvatarImage src={user.photoURL} alt={user.displayName || user.username} />
+          <AvatarFallback>{(user.displayName || user.username || 'U').charAt(0)}</AvatarFallback>
         </Avatar>
         <div>
-          <CardTitle className="text-lg">{user.displayName}</CardTitle>
+          <CardTitle className="text-lg">{user.displayName || user.username}</CardTitle>
           <div className="flex items-center text-sm text-muted-foreground">
              <span className={`h-2 w-2 rounded-full mr-2 ${user.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
             {user.isOnline ? 'Online' : 'Offline'}
@@ -70,7 +70,7 @@ export default function UserCard({ user, currentUserId, isFollowing }: UserCardP
           className="w-full"
           onClick={handleFollowToggle}
           disabled={isPending}
-          aria-label={isFollowing ? `Unfollow ${user.displayName}` : `Follow ${user.displayName}`}
+          aria-label={isFollowing ? `Unfollow ${user.displayName || user.username}` : `Follow ${user.displayName || user.username}`}
         >
           {isFollowing ? <UserMinus /> : <UserPlus />}
           {isFollowing ? 'Unfollow' : 'Follow'}
