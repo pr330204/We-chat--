@@ -40,7 +40,7 @@ export default async function ChatPage({ params }: { params: { id: string } }) {
           </div>
         </div>
       </header>
-      <ChatInterface user={user} />
+      <ChatInterface recipient={user} />
     </div>
   );
 }

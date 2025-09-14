@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { onAuthStateChanged, signInWithPopup, User as FirebaseUser } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
-import { getUser, checkUserExists } from '@/lib/firestore';
+import { getUser, checkUserExists, updateUserOnlineStatus } from '@/lib/firestore';
 import type { AppUser, AuthContextType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -53,6 +53,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
+      if (user) {
+        await updateUserOnlineStatus(user.uid, false);
+      }
       await auth.signOut();
       setUser(null);
       setFirebaseUser(null);
@@ -65,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: 'destructive',
       });
     }
-  }, [toast]);
+  }, [toast, user]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
@@ -74,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const userExists = await checkUserExists(fbUser.uid);
           if (userExists) {
+            await updateUserOnlineStatus(fbUser.uid, true);
             const appUser = await getUser(fbUser.uid);
             setUser(appUser);
             setIsNewUser(false);
@@ -91,6 +95,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            await signOut();
         }
       } else {
+        if(user) {
+           updateUserOnlineStatus(user.uid, false);
+        }
         setUser(null);
         setFirebaseUser(null);
         setIsNewUser(false);
@@ -99,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [toast, signOut]);
+  }, [toast, signOut, user]);
 
   const value = { user, firebaseUser, loading, signIn, signOut, isNewUser, reloadUser };
 

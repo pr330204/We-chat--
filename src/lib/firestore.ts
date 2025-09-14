@@ -82,10 +82,6 @@ export async function getUser(uid: string): Promise<AppUser | null> {
 
     if (userSnap.exists()) {
         const userData = userSnap.data() as AppUser;
-        // Simulate online status for demo
-        const allUsers = await getDocs(collection(db, 'users'));
-        const userIndex = allUsers.docs.findIndex(doc => doc.id === uid);
-        userData.isOnline = userIndex % 2 === 0;
         return userData;
     } else {
         return null;
@@ -99,7 +95,6 @@ export async function getAllUsers(): Promise<AppUser[]> {
   const userList = userSnapshot.docs.map((doc, i) => ({
     ...(doc.data() as AppUser),
     uid: doc.id,
-    isOnline: i % 2 === 0, // Simulate online status for demo
   }));
   return userList;
 }
@@ -115,6 +110,13 @@ export async function unfollowUserInFirestore(currentUserId: string, targetUserI
   const userRef = doc(db, 'users', currentUserId);
   await updateDoc(userRef, {
     following: arrayRemove(targetUserId),
+  });
+}
+
+export async function updateUserOnlineStatus(uid: string, isOnline: boolean): Promise<void> {
+  const userRef = doc(db, 'users', uid);
+  await updateDoc(userRef, {
+    isOnline: isOnline,
   });
 }
 

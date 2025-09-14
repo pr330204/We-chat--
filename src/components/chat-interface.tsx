@@ -15,7 +15,7 @@ export default function ChatInterface({ recipient }: { recipient: AppUser }) {
   const { user: currentUser } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollAreaViewport = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -29,11 +29,8 @@ export default function ChatInterface({ recipient }: { recipient: AppUser }) {
   }, [currentUser, recipient.uid]);
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({
-        top: scrollAreaRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+    if (scrollAreaViewport.current) {
+        scrollAreaViewport.current.scrollTop = scrollAreaViewport.current.scrollHeight;
     }
   }, [messages]);
 
@@ -52,7 +49,7 @@ export default function ChatInterface({ recipient }: { recipient: AppUser }) {
 
   return (
     <div className="flex-grow flex flex-col">
-      <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
+      <ScrollArea className="flex-grow p-4" viewportRef={scrollAreaViewport}>
         <div className="space-y-6">
           {messages.map((message) => {
             const isMe = message.from === currentUser?.uid;
