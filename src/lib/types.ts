@@ -8,7 +8,6 @@ export type AppUser = {
   photoURL: string;
   following: string[];
   summary: string;
-  isOnline: boolean;
   username: string;
   createdAt: string | null;
 };
@@ -31,3 +30,8 @@ export type ChatMessage = {
   to: string;
   timestamp: Timestamp;
 };
+
+export type UserStatus = {
+    state: 'online' | 'offline';
+    last_changed: number;
+}

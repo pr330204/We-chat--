@@ -58,7 +58,6 @@ export async function createUserProfile(firebaseUser: FirebaseUser, username: st
         photoURL,
         following: [],
         summary: summary || `A fascinating individual.`,
-        isOnline: true,
         username,
       };
 
@@ -89,7 +88,7 @@ export async function getUser(uid: string): Promise<AppUser | null> {
         // Convert Firestore Timestamp to a serializable format (ISO string)
         const createdAt = (userData.createdAt as Timestamp)?.toDate().toISOString() || null;
         return {
-          ...(userData as AppUser),
+          ...(userData as Omit<AppUser, 'createdAt'>),
           createdAt,
         };
     } else {
@@ -105,7 +104,7 @@ export async function getAllUsers(): Promise<AppUser[]> {
      const userData = doc.data();
      const createdAt = (userData.createdAt as Timestamp)?.toDate().toISOString() || null;
     return {
-      ...(userData as AppUser),
+      ...(userData as Omit<AppUser, 'createdAt'>),
       uid: doc.id,
       createdAt,
     };

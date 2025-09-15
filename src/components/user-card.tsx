@@ -9,6 +9,7 @@ import { followUser, unfollowUser } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useUserStatus } from '@/hooks/use-user-status';
 
 type UserCardProps = {
   user: AppUser;
@@ -19,6 +20,8 @@ type UserCardProps = {
 export default function UserCard({ user, currentUserId, isFollowing }: UserCardProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const userStatus = useUserStatus(user.uid);
+  const isOnline = userStatus?.state === 'online';
 
   const handleFollowToggle = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent Link from navigating
@@ -52,8 +55,8 @@ export default function UserCard({ user, currentUserId, isFollowing }: UserCardP
           <div>
             <CardTitle className="text-lg">{user.displayName || user.username}</CardTitle>
             <div className="flex items-center text-sm text-muted-foreground">
-               <span className={`h-2 w-2 rounded-full mr-2 ${user.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-              {user.isOnline ? 'Online' : 'Offline'}
+               <span className={`h-2 w-2 rounded-full mr-2 ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+              {isOnline ? 'Online' : 'Offline'}
             </div>
           </div>
         </CardHeader>

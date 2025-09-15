@@ -7,10 +7,12 @@ import {
   useCallback,
 } from 'react';
 import { onAuthStateChanged, signInWithPopup, User as FirebaseUser, signInWithCustomToken } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
+import { auth, googleProvider, rtdb } from '@/lib/firebase';
 import { getUser, checkUserExists, updateUserOnlineStatus } from '@/lib/firestore';
 import type { AppUser, AuthContextType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { ref, onValue, set, onDisconnect, serverTimestamp } from 'firebase/database';
+
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -61,8 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
-      if (user) {
-        await updateUserOnlineStatus(user.uid, false);
+      if (auth.currentUser) {
+        const userStatusRef = ref(rtdb, `/status/${auth.currentUser.uid}`);
+        await set(userStatusRef, {
+            state: 'offline',
+            last_changed: serverTimestamp(),
+        });
       }
       await auth.signOut();
       setUser(null);
@@ -76,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: 'destructive',
       });
     }
-  }, [toast, user]);
+  }, [toast]);
 
   const signInWithToken = useCallback(async (token: string) => {
     try {
@@ -96,10 +102,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
         setFirebaseUser(fbUser);
+
+        // Realtime Database presence management
+        const userStatusRef = ref(rtdb, `/status/${fbUser.uid}`);
+        const connectedRef = ref(rtdb, '.info/connected');
+
+        onValue(connectedRef, (snap) => {
+          if (snap.val() === true) {
+            set(userStatusRef, { state: 'online', last_changed: serverTimestamp() });
+            onDisconnect(userStatusRef).set({ state: 'offline', last_changed: serverTimestamp() });
+          }
+        });
+
         try {
           const userExists = await checkUserExists(fbUser.uid);
           if (userExists) {
-            await updateUserOnlineStatus(fbUser.uid, true);
             const appUser = await getUser(fbUser.uid);
             setUser(appUser);
             setIsNewUser(false);
@@ -117,9 +134,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            await signOut();
         }
       } else {
-        if(user) {
-           updateUserOnlineStatus(user.uid, false);
-        }
         setUser(null);
         setFirebaseUser(null);
         setIsNewUser(false);
@@ -127,22 +141,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (auth.currentUser) {
-        // This is a synchronous update but might not always complete.
-        // For a more robust solution, Firebase Realtime Database's presence system is recommended.
-        // However, this provides a basic level of presence management.
-        updateUserOnlineStatus(auth.currentUser.uid, false);
-      }
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
     return () => {
       unsubscribe();
-      window.removeEventListener('beforeunload', handleBeforeUnload);
     }
-  }, [toast, signOut, user]);
+  }, [toast, signOut]);
 
   const value = { user, firebaseUser, loading, signIn, signOut, isNewUser, reloadUser, signInWithToken };
 
