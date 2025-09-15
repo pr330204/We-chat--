@@ -21,6 +21,7 @@ export type AuthContextType = {
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   reloadUser: () => Promise<void>;
+  signInWithToken: (token: string) => Promise<void>;
 };
 
 export type ChatMessage = {

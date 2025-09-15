@@ -6,7 +6,7 @@ import {
   ReactNode,
   useCallback,
 } from 'react';
-import { onAuthStateChanged, signInWithPopup, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, User as FirebaseUser, signInWithCustomToken } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { getUser, checkUserExists, updateUserOnlineStatus } from '@/lib/firestore';
 import type { AppUser, AuthContextType } from '@/lib/types';
@@ -78,6 +78,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [toast, user]);
 
+  const signInWithToken = useCallback(async (token: string) => {
+    try {
+      await signInWithCustomToken(auth, token);
+    } catch (error) {
+      console.error('Error signing in with custom token:', error);
+      toast({
+        title: 'Authentication Failed',
+        description: 'Could not sign you in with the provided token.',
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
+
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
@@ -116,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [toast, signOut, user]);
 
-  const value = { user, firebaseUser, loading, signIn, signOut, isNewUser, reloadUser };
+  const value = { user, firebaseUser, loading, signIn, signOut, isNewUser, reloadUser, signInWithToken };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
