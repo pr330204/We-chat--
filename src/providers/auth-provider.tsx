@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error.code === 'auth/popup-closed-by-user') {
         toast({
           title: 'Sign-in Cancelled',
-          description: 'आपने साइन-इन पॉपअप बंद कर दिया। कृपया फिर से प्रयास करें।',
+          description: ' आपने साइन-इन पॉपअप बंद कर दिया। कृपया फिर से प्रयास करें।',
           variant: 'destructive',
         });
       } else {
@@ -127,7 +127,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (auth.currentUser) {
+        // This is a synchronous update but might not always complete.
+        // For a more robust solution, Firebase Realtime Database's presence system is recommended.
+        // However, this provides a basic level of presence management.
+        updateUserOnlineStatus(auth.currentUser.uid, false);
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    }
   }, [toast, signOut, user]);
 
   const value = { user, firebaseUser, loading, signIn, signOut, isNewUser, reloadUser, signInWithToken };
