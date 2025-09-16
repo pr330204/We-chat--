@@ -36,7 +36,7 @@ export default function UserList({ currentUser }: { currentUser: AppUser }) {
       const bIsFollowed = currentUser.following.includes(b.uid);
       if (aIsFollowed && !bIsFollowed) return -1;
       if (!aIsFollowed && bIsFollowed) return 1;
-      return (a.displayName || '').localeCompare(b.displayName || '');
+      return (a.username || '').localeCompare(b.username || '');
     });
   }, [users, searchQuery, currentUser.following]);
 
@@ -77,7 +77,7 @@ export default function UserList({ currentUser }: { currentUser: AppUser }) {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
+    <div className="container mx-auto p-4 md-p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Welcome, {currentUser.username}!</h1>
         <p className="text-muted-foreground mb-4">Browse and search for other users on the platform.</p>

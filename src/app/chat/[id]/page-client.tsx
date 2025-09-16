@@ -32,11 +32,11 @@ export default function ChatPageClient({ user }: { user: AppUser | null }) {
           </Link>
         </Button>
         <Avatar className="h-10 w-10 mr-4">
-          <AvatarImage src={user.photoURL} alt={user.displayName} />
-          <AvatarFallback>{user.displayName.charAt(0)}</AvatarFallback>
+          <AvatarImage src={user.photoURL} alt={user.username} />
+          <AvatarFallback>{user.username.charAt(0)}</AvatarFallback>
         </Avatar>
         <div className="flex-grow">
-          <h2 className="font-semibold text-lg">{user.displayName}</h2>
+          <h2 className="font-semibold text-lg">{user.username}</h2>
           <div className="flex items-center text-sm text-muted-foreground">
              <span className={`h-2 w-2 rounded-full mr-2 ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
             {isOnline ? 'Online' : 'Offline'}

@@ -49,11 +49,11 @@ export default function UserCard({ user, currentUserId, isFollowing }: UserCardP
       <Link href={`/chat/${user.uid}`} className="flex flex-col flex-grow h-full">
         <CardHeader className="flex-row items-center gap-4">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={user.photoURL} alt={user.displayName || user.username} />
-            <AvatarFallback>{(user.displayName || user.username || 'U').charAt(0)}</AvatarFallback>
+            <AvatarImage src={user.photoURL} alt={user.username} />
+            <AvatarFallback>{(user.username || 'U').charAt(0)}</AvatarFallback>
           </Avatar>
           <div>
-            <CardTitle className="text-lg">{user.displayName || user.username}</CardTitle>
+            <CardTitle className="text-lg">{user.username}</CardTitle>
             <div className="flex items-center text-sm text-muted-foreground">
                <span className={`h-2 w-2 rounded-full mr-2 ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
               {isOnline ? 'Online' : 'Offline'}
@@ -69,7 +69,7 @@ export default function UserCard({ user, currentUserId, isFollowing }: UserCardP
           className="w-full"
           onClick={handleFollowToggle}
           disabled={isPending}
-          aria-label={isFollowing ? `Unfollow ${user.displayName || user.username}` : `Follow ${user.displayName || user.username}`}
+          aria-label={isFollowing ? `Unfollow ${user.username}` : `Follow ${user.username}`}
         >
           {isFollowing ? <UserMinus /> : <UserPlus />}
           {isFollowing ? 'Unfollow' : 'Follow'}
