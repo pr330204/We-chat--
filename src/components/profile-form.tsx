@@ -39,7 +39,7 @@ export default function ProfileForm() {
   const form = useForm<z.infer<typeof ProfileFormSchema>>({
     resolver: zodResolver(ProfileFormSchema),
     defaultValues: {
-      username: firebaseUser?.displayName?.split(' ')[0].toLowerCase() || '',
+      username: '',
     },
   });
 
