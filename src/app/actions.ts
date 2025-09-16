@@ -7,7 +7,7 @@ import { followUserInFirestore, unfollowUserInFirestore } from '@/lib/firestore'
 export async function followUser(currentUserId: string, targetUserId: string) {
   try {
     await followUserInFirestore(currentUserId, targetUserId);
-    revalidatePath('/');
+    // revalidatePath('/');
     return { success: true };
   } catch (error) {
     console.error('Error following user:', error);
@@ -18,7 +18,7 @@ export async function followUser(currentUserId: string, targetUserId: string) {
 export async function unfollowUser(currentUserId: string, targetUserId: string) {
   try {
     await unfollowUserInFirestore(currentUserId, targetUserId);
-    revalidatePath('/');
+    // revalidatePath('/');
     return { success: true };
   } catch (error) {
     console.error('Error unfollowing user:', error);
