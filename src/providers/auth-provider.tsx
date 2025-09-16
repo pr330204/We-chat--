@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userStatusRef = ref(rtdb, `/status/${auth.currentUser.uid}`);
         await set(userStatusRef, {
             state: 'offline',
-            last_changed: serverTimestamp(),
+            last_changed: Date.now(),
         });
       }
       await auth.signOut();
