@@ -62,7 +62,7 @@ export default function ChatInterface({ recipient }: { recipient: AppUser }) {
                 {!isMe && (
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={sender.photoURL} />
-                    <AvatarFallback>{sender.displayName.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>{sender.username.charAt(0)}</AvatarFallback>
                   </Avatar>
                 )}
                 <div
