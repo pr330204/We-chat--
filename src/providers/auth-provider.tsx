@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { onAuthStateChanged, signInWithPopup, User as FirebaseUser, signInWithCustomToken } from 'firebase/auth';
 import { auth, googleProvider, rtdb } from '@/lib/firebase';
-import { getUser, checkUserExists, updateUserOnlineStatus } from '@/lib/firestore';
+import { getUser, checkUserExists } from '@/lib/firestore';
 import type { AppUser, AuthContextType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { ref, onValue, set, onDisconnect, serverTimestamp } from 'firebase/database';
@@ -63,13 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
-      if (auth.currentUser) {
-        const userStatusRef = ref(rtdb, `/status/${auth.currentUser.uid}`);
-        await set(userStatusRef, {
-            state: 'offline',
-            last_changed: Date.now(),
-        });
-      }
+      // The onDisconnect handler will automatically set the user to offline.
+      // Manually setting it here is redundant and can cause permission issues on logout.
       await auth.signOut();
       setUser(null);
       setFirebaseUser(null);
