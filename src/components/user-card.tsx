@@ -61,7 +61,6 @@ export default function UserCard({ user, currentUserId, isFollowing }: UserCardP
           </div>
         </CardHeader>
         <CardContent className="flex-grow">
-          <p className="text-sm text-muted-foreground italic">"{user.summary}"</p>
         </CardContent>
       </Link>
       <CardFooter>

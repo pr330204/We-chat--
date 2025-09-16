@@ -18,7 +18,6 @@ import {
 import type { User as FirebaseUser } from 'firebase/auth';
 import { db } from './firebase';
 import type { AppUser, ChatMessage } from './types';
-import { generateProfileSummary } from '@/ai/flows/generate-profile-summary';
 
 
 export async function checkUserExists(uid: string): Promise<boolean> {
@@ -43,21 +42,12 @@ export async function createUserProfile(firebaseUser: FirebaseUser, username: st
         throw new Error(`Username "${username}" is already taken.`);
       }
 
-      const [firstName, ...lastNameParts] = displayName.split(' ');
-      const lastInitial = lastNameParts.length > 0 ? lastNameParts[lastNameParts.length - 1].charAt(0) : (firstName.length > 1 ? firstName.charAt(1) : '');
-
-      const { summary } = await generateProfileSummary({
-        firstName: firstName || '',
-        lastInitial: lastInitial.toUpperCase(),
-      });
-
       const userProfile: Omit<AppUser, 'createdAt'> = {
         uid,
         displayName,
         email,
         photoURL,
         following: [],
-        summary: summary || `A fascinating individual.`,
         username,
       };
 

@@ -7,7 +7,6 @@ export type AppUser = {
   email: string;
   photoURL: string;
   following: string[];
-  summary: string;
   username: string;
   createdAt: string | null;
 };
