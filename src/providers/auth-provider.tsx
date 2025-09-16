@@ -1,4 +1,5 @@
 'use client';
+'use client';
 import {
   createContext,
   useState,
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error.code === 'auth/popup-closed-by-user') {
         toast({
           title: 'Sign-in Cancelled',
-          description: ' आपने साइन-इन पॉपअप बंद कर दिया। कृपया फिर से प्रयास करें।',
+          description: 'You closed the sign-in popup. Please try again.',
           variant: 'destructive',
         });
       } else {
@@ -64,7 +65,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     try {
       // The onDisconnect handler will automatically set the user to offline.
-      // Manually setting it here is redundant and can cause permission issues on logout.
       await auth.signOut();
       setUser(null);
       setFirebaseUser(null);
@@ -144,4 +144,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = { user, firebaseUser, loading, signIn, signOut, isNewUser, reloadUser, signInWithToken };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+}￼Enter
